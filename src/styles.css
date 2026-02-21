@@ -42,6 +42,12 @@ html, body {
 #timer.orange { color: #fb923c; animation: pulse-gentle 2s ease-in-out infinite; }
 #timer.red    { color: #ef4444; animation: pulse-strong 1s ease-in-out infinite; }
 
+/* Background alert stages */
+#app { transition: background 0.8s ease; }
+#app.stage-orange { background: rgba(60, 30, 10, 0.88); }
+#app.stage-red    { background: rgba(70, 15, 15, 0.90); }
+#app.stage-critical { background: rgba(90, 10, 10, 0.92); }
+
 /* Buttons */
 #buttons {
   display: flex;
@@ -88,6 +94,17 @@ html, body {
   background: #ef4444;
 }
 
+#btn-skip {
+  background: #444;
+  color: #aaa;
+  font-size: 10px;
+  padding: 3px 6px;
+}
+
+#btn-skip:hover {
+  background: #555;
+}
+
 /* History dots */
 #history {
   display: flex;
@@ -103,6 +120,7 @@ html, body {
 
 .dot.stretch { background: #4ade80; }
 .dot.treadmill { background: #60a5fa; }
+.dot.skip { background: #666; border: 1px solid #888; }
 .dot.overdue { background: #ef4444; }
 
 /* AFK badge */
@@ -175,11 +193,159 @@ html, body {
   color: #ef4444;
 }
 
+/* Anchor corner button — always gets priority corner position */
+#btn-anchor {
+  position: absolute;
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 7px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+#btn-anchor:hover {
+  color: #aaa;
+}
+
+#btn-anchor.anchor-top-left     { top: 4px; left: 6px; bottom: auto; right: auto; }
+#btn-anchor.anchor-top-right    { top: 4px; right: 6px; bottom: auto; left: auto; }
+#btn-anchor.anchor-bottom-left  { bottom: 4px; left: 6px; top: auto; right: auto; }
+#btn-anchor.anchor-bottom-right { bottom: 4px; right: 6px; top: auto; left: auto; }
+
+/* Shift other corner buttons away when anchor occupies their corner */
+#app.anchor-corner-top-right #btn-close    { top: 4px; right: 18px; }
+#app.anchor-corner-top-left #btn-settings  { top: 4px; left: 20px; }
+#app.anchor-corner-bottom-left #btn-stats  { bottom: 4px; left: 20px; }
+
+/* Quit confirmation dialog */
+#quit-dialog {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+#quit-dialog span {
+  color: #e5e5e5;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#quit-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#quit-buttons button {
+  padding: 3px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#quit-yes {
+  background: #ef4444;
+  color: #fff;
+}
+
+#quit-yes:hover {
+  background: #dc2626;
+}
+
+#quit-no {
+  background: #555;
+  color: #e5e5e5;
+}
+
+#quit-no:hover {
+  background: #666;
+}
+
+/* Skip confirmation dialog */
+#skip-dialog {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.97);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  z-index: 10;
+}
+
+#skip-dialog #skip-message {
+  color: #e5e5e5;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+
+#skip-dialog.stage-final {
+  background: rgba(40, 10, 10, 0.97);
+}
+
+#skip-dialog.stage-final #skip-message {
+  color: #ef4444;
+}
+
+#skip-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#skip-buttons button {
+  padding: 3px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#skip-yes {
+  background: #ef4444;
+  color: #fff;
+}
+
+#skip-yes:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+#skip-yes:disabled {
+  background: #555;
+  color: #777;
+  cursor: not-allowed;
+}
+
+#skip-no {
+  background: #4ade80;
+  color: #1a1a1a;
+}
+
+#skip-no:hover {
+  background: #22c55e;
+}
+
 .hidden {
   display: none !important;
 }
 
-/* Compact mode */
+/* Compact mode — small window */
 #app.compact #buttons,
 #app.compact #history,
 #app.compact #afk-badge,
@@ -191,10 +357,17 @@ html, body {
 
 #app.compact {
   justify-content: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+#app.compact:not(.stage-orange):not(.stage-red):not(.stage-critical) {
+  background: rgba(30, 30, 30, 0.9);
 }
 
 #app.compact #timer {
-  font-size: 24px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
 /* Animations */
@@ -209,20 +382,30 @@ html, body {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10% { transform: translateX(-5px); }
-  20% { transform: translateX(5px); }
-  30% { transform: translateX(-5px); }
-  40% { transform: translateX(5px); }
-  50% { transform: translateX(-3px); }
-  60% { transform: translateX(3px); }
-  70% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
-  90% { transform: translateX(-1px); }
+  0%, 100% { transform: translate(0, 0); }
+  5%  { transform: translate(-10px, -2px); }
+  10% { transform: translate(10px, 3px); }
+  15% { transform: translate(-8px, -4px); }
+  20% { transform: translate(8px, 2px); }
+  25% { transform: translate(-10px, 3px); }
+  30% { transform: translate(10px, -2px); }
+  35% { transform: translate(-6px, 4px); }
+  40% { transform: translate(6px, -3px); }
+  45% { transform: translate(-8px, 2px); }
+  50% { transform: translate(8px, -2px); }
+  55% { transform: translate(-5px, 3px); }
+  60% { transform: translate(5px, -2px); }
+  65% { transform: translate(-4px, 2px); }
+  70% { transform: translate(4px, -1px); }
+  75% { transform: translate(-3px, 1px); }
+  80% { transform: translate(3px, -1px); }
+  85% { transform: translate(-2px, 1px); }
+  90% { transform: translate(2px, 0px); }
+  95% { transform: translate(-1px, 0px); }
 }
 
 #app.shake {
-  animation: shake 0.5s ease-in-out;
+  animation: shake 0.8s ease-in-out;
 }
 
 @keyframes flash-green {

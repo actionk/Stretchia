@@ -26,7 +26,7 @@ pub fn db_path() -> PathBuf {
     } else {
         dirs_fallback()
     };
-    base.join("StretchReminder")
+    base.join("Stretchia")
 }
 
 fn dirs_fallback() -> PathBuf {
@@ -72,6 +72,7 @@ pub fn initialize() -> rusqlite::Result<Connection> {
         ("shake_at_min", "75"),
         ("window_opacity", "0.8"),
         ("history_dots_count", "10"),
+        ("window_anchor", "top-right"),
     ];
     for (k, v) in defaults {
         conn.execute(
@@ -89,6 +90,16 @@ pub fn record_stretch(conn: &Connection, sitting_before_s: i64) -> rusqlite::Res
         "INSERT INTO workouts (type, started_at, ended_at, duration_s, sitting_before_s)
          VALUES ('stretch', ?1, ?2, 300, ?3)",
         params![now, now + 300, sitting_before_s],
+    )?;
+    Ok(())
+}
+
+pub fn record_skip(conn: &Connection, sitting_before_s: i64) -> rusqlite::Result<()> {
+    let now = chrono::Utc::now().timestamp();
+    conn.execute(
+        "INSERT INTO workouts (type, started_at, ended_at, duration_s, sitting_before_s)
+         VALUES ('skip', ?1, ?1, 0, ?2)",
+        params![now, sitting_before_s],
     )?;
     Ok(())
 }

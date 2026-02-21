@@ -1,7 +1,7 @@
 {
-  "name": "stretchreminder",
+  "name": "stretchia",
   "version": "1.0.0",
-  "description": "",
+  "description": "A tiny desktop break reminder that gently escalates from green to red until you get up and stretch",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,8 +9,8 @@
     "tauri": "tauri"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Andrei Cherkashin (actionk)",
+  "license": "MIT",
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0",
     "typescript": "^5.9.3",
