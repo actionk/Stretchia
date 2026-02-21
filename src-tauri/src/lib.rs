@@ -99,9 +99,21 @@ fn cmd_open_stats(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn cmd_delete_workout(state: tauri::State<'_, Mutex<AppState>>, id: i64) -> Result<(), String> {
+    let s = state.lock().map_err(|e| e.to_string())?;
+    db::delete_workout(&s.db, id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn cmd_get_day_stats(state: tauri::State<'_, Mutex<AppState>>, date: String) -> Result<db::DayStats, String> {
     let s = state.lock().map_err(|e| e.to_string())?;
     db::get_stats_for_date(&s.db, &date).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn cmd_quit(app: tauri::AppHandle) -> Result<(), String> {
+    app.exit(0);
+    Ok(())
 }
 
 #[tauri::command]
@@ -211,8 +223,10 @@ pub fn run() {
             cmd_save_window_position,
             cmd_open_settings,
             cmd_open_stats,
+            cmd_delete_workout,
             cmd_get_day_stats,
             cmd_apply_settings,
+            cmd_quit,
         ])
         .setup(|app| {
             tray::create_tray(app.handle())?;

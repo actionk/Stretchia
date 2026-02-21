@@ -217,6 +217,11 @@ pub fn get_stats_for_date(conn: &Connection, date: &str) -> rusqlite::Result<Day
     })
 }
 
+pub fn delete_workout(conn: &Connection, id: i64) -> rusqlite::Result<()> {
+    conn.execute("DELETE FROM workouts WHERE id = ?1", params![id])?;
+    Ok(())
+}
+
 pub fn get_setting(conn: &Connection, key: &str) -> Option<String> {
     conn.query_row(
         "SELECT value FROM settings WHERE key = ?1",
