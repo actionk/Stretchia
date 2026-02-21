@@ -35,6 +35,8 @@ pub struct TimerState {
     pub sitting_before_s: u64,
     pub is_afk: bool,
     pub afk_threshold_s: u64,
+    pub warn_at_min: u64,
+    pub shake_at_min: u64,
 }
 
 impl TimerState {
@@ -46,17 +48,28 @@ impl TimerState {
             sitting_before_s: 0,
             is_afk: false,
             afk_threshold_s: 300, // 5 minutes default
+            warn_at_min: 30,
+            shake_at_min: 60,
         }
     }
 
     pub fn calculate_stage(&self) -> Stage {
         let minutes = self.elapsed_s / 60;
-        match minutes {
-            0..=29 => Stage::Green,
-            30..=44 => Stage::Yellow,
-            45..=59 => Stage::Orange,
-            60..=74 => Stage::Red,
-            _ => Stage::Critical,
+        let warn = self.warn_at_min;
+        let shake = self.shake_at_min;
+        // Derive thresholds: green -> yellow at warn, orange at midpoint, red at shake, critical at shake+15
+        let mid = warn + (shake - warn) / 2;
+        let critical = shake + 15;
+        if minutes < warn {
+            Stage::Green
+        } else if minutes < mid {
+            Stage::Yellow
+        } else if minutes < shake {
+            Stage::Orange
+        } else if minutes < critical {
+            Stage::Red
+        } else {
+            Stage::Critical
         }
     }
 

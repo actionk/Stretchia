@@ -6,12 +6,13 @@ interface Setting {
   value: string;
 }
 
-const fields: Record<string, HTMLInputElement> = {
+const fields: Record<string, HTMLInputElement | HTMLSelectElement> = {
   afk_threshold_min: document.getElementById("afk_threshold_min") as HTMLInputElement,
   warn_at_min: document.getElementById("warn_at_min") as HTMLInputElement,
   shake_at_min: document.getElementById("shake_at_min") as HTMLInputElement,
   window_opacity: document.getElementById("window_opacity") as HTMLInputElement,
   history_dots_count: document.getElementById("history_dots_count") as HTMLInputElement,
+  window_anchor: document.getElementById("window_anchor") as HTMLSelectElement,
 };
 
 const opacityDisplay = document.getElementById("opacity-display")!;

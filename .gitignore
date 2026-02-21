@@ -1,8 +1,37 @@
+# Dependencies
 node_modules/
-dist/
-.idea/
-*.sln
 
-# Tauri
+# Build output
+dist/
 src-tauri/target/
-src-tauri/gen/schemas
+src-tauri/gen/schemas/
+
+# IDE
+.idea/
+.vscode/
+*.sln
+*.suo
+*.user
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tauri debug
+src-tauri/WixTools/
+src-tauri/NSIS/
+
+# Claude Code
+.claude/

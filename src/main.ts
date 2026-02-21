@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, LogicalSize, PhysicalPosition } from "@tauri-apps/api/window";
 
 interface TimerState {
   mode: string;
@@ -22,15 +22,38 @@ interface Workout {
 const timerEl = document.getElementById("timer")!;
 const btnStretch = document.getElementById("btn-stretch")!;
 const btnTreadmill = document.getElementById("btn-treadmill")!;
+const btnSkip = document.getElementById("btn-skip")!;
 const btnSettings = document.getElementById("btn-settings")!;
 const btnStats = document.getElementById("btn-stats")!;
 const btnClose = document.getElementById("btn-close")!;
+const btnAnchor = document.getElementById("btn-anchor")!;
 const historyEl = document.getElementById("history")!;
 const afkBadge = document.getElementById("afk-badge")!;
 const appEl = document.getElementById("app")!;
+const skipDialog = document.getElementById("skip-dialog")!;
+const skipMessage = document.getElementById("skip-message")!;
+const skipYes = document.getElementById("skip-yes")! as HTMLButtonElement;
+const skipNo = document.getElementById("skip-no")!;
+
+const anchorChars: Record<string, string> = {
+  "top-left": "\u25E4",
+  "top-right": "\u25E5",
+  "bottom-left": "\u25E3",
+  "bottom-right": "\u25E2",
+};
 
 let compact = false;
+let anchor = "top-right";
+let lastElapsedS = 0;
+let skipStage = 0;
+let skipCountdownTimer: number | null = null;
 const RED_THRESHOLD_S = 90 * 60; // 1h 30min without workout = red dot
+
+const skipMessages = [
+  "Your skeleton trusted you. Skip anyway?",
+  "Your spine just filed a formal complaint. Still sure?",
+  "In 20 years you'll be shaped like a question mark. Final answer?",
+];
 
 function formatTime(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600);
@@ -39,9 +62,20 @@ function formatTime(totalSeconds: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatTimeShort(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
 function applyStage(stage: string) {
   timerEl.classList.remove("green", "yellow", "orange", "red");
   timerEl.classList.add(stage);
+  // Background alert
+  appEl.classList.remove("stage-orange", "stage-red", "stage-critical");
+  if (stage === "orange") appEl.classList.add("stage-orange");
+  else if (stage === "red") appEl.classList.add("stage-red");
+  else if (stage === "critical") appEl.classList.add("stage-critical");
 }
 
 function flashApp(color: "green" | "blue") {
@@ -56,6 +90,48 @@ function triggerShake() {
   void appEl.offsetWidth;
   appEl.classList.add("shake");
   setTimeout(() => appEl.classList.remove("shake"), 600);
+}
+
+async function resizeAnchored(newSize: LogicalSize) {
+  const win = getCurrentWindow();
+  const pos = await win.outerPosition();
+  const oldSize = await win.innerSize();
+
+  await win.setSize(newSize);
+
+  const newActualSize = await win.innerSize();
+  const dx = oldSize.width - newActualSize.width;
+  const dy = oldSize.height - newActualSize.height;
+
+  let newX = pos.x;
+  let newY = pos.y;
+  if (anchor === "top-right" || anchor === "bottom-right") newX += dx;
+  if (anchor === "bottom-left" || anchor === "bottom-right") newY += dy;
+
+  await win.setPosition(new PhysicalPosition(newX, newY));
+}
+
+function updateAnchorIcon() {
+  btnAnchor.textContent = anchorChars[anchor] || "\u25E5";
+  btnAnchor.className = `anchor-${anchor}`;
+  // Set corner class on app for layout-aware shifting of other buttons
+  appEl.classList.remove("anchor-corner-top-left", "anchor-corner-top-right", "anchor-corner-bottom-left", "anchor-corner-bottom-right");
+  appEl.classList.add(`anchor-corner-${anchor}`);
+}
+
+async function loadAnchorSetting() {
+  try {
+    const settings = await invoke<{ key: string; value: string }[]>("cmd_get_settings");
+    for (const s of settings) {
+      if (s.key === "window_anchor") {
+        anchor = s.value;
+        break;
+      }
+    }
+  } catch (_) {
+    // Keep default
+  }
+  updateAnchorIcon();
 }
 
 async function loadHistory() {
@@ -73,7 +149,8 @@ async function loadHistory() {
       }
       const dot = document.createElement("div");
       dot.className = "dot";
-      dot.classList.add(w.workout_type === "stretch" ? "stretch" : "treadmill");
+      const dotType = w.workout_type === "stretch" ? "stretch" : w.workout_type === "treadmill" ? "treadmill" : "skip";
+      dot.classList.add(dotType);
       historyEl.appendChild(dot);
     }
   } catch (e) {
@@ -84,7 +161,8 @@ async function loadHistory() {
 // Listen for timer tick events from Rust
 listen<TimerState>("timer-tick", (event) => {
   const state = event.payload;
-  timerEl.textContent = formatTime(state.elapsed_s);
+  lastElapsedS = state.elapsed_s;
+  timerEl.textContent = compact ? formatTimeShort(state.elapsed_s) : formatTime(state.elapsed_s);
 
   if (state.is_treadmill) {
     timerEl.classList.remove("green", "yellow", "orange", "red");
@@ -102,6 +180,13 @@ listen<TimerState>("timer-tick", (event) => {
     afkBadge.classList.remove("hidden");
   } else {
     afkBadge.classList.add("hidden");
+  }
+
+  // Show skip button only during alert phases
+  if (state.stage === "red" || state.stage === "critical") {
+    btnSkip.classList.remove("hidden");
+  } else {
+    btnSkip.classList.add("hidden");
   }
 
   // Shake at critical stage every 5 minutes
@@ -131,6 +216,63 @@ btnTreadmill.addEventListener("click", async () => {
   }
 });
 
+// Skip button — multi-stage guilt trip
+function showSkipStage() {
+  skipDialog.classList.remove("hidden");
+  skipMessage.textContent = skipMessages[skipStage];
+
+  if (skipStage === 2) {
+    skipDialog.classList.add("stage-final");
+    let countdown = 10;
+    skipYes.disabled = true;
+    skipYes.textContent = `Yes (${countdown})`;
+    skipCountdownTimer = window.setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(skipCountdownTimer!);
+        skipCountdownTimer = null;
+        skipYes.disabled = false;
+        skipYes.textContent = "Yes";
+      } else {
+        skipYes.textContent = `Yes (${countdown})`;
+      }
+    }, 1000);
+  } else {
+    skipDialog.classList.remove("stage-final");
+    skipYes.disabled = false;
+    skipYes.textContent = "Yes";
+  }
+}
+
+function hideSkipDialog() {
+  skipDialog.classList.add("hidden");
+  skipDialog.classList.remove("stage-final");
+  if (skipCountdownTimer !== null) {
+    clearInterval(skipCountdownTimer);
+    skipCountdownTimer = null;
+  }
+}
+
+btnSkip.addEventListener("click", () => {
+  skipStage = 0;
+  showSkipStage();
+});
+
+skipYes.addEventListener("click", async () => {
+  if (skipStage < 2) {
+    skipStage++;
+    showSkipStage();
+  } else {
+    hideSkipDialog();
+    await invoke("cmd_record_skip");
+    await loadHistory();
+  }
+});
+
+skipNo.addEventListener("click", () => {
+  hideSkipDialog();
+});
+
 // Settings button
 btnSettings.addEventListener("click", async () => {
   await invoke("cmd_open_settings");
@@ -141,22 +283,52 @@ btnStats.addEventListener("click", async () => {
   await invoke("cmd_open_stats");
 });
 
-// Close/quit button
-btnClose.addEventListener("click", async () => {
-  if (confirm("Quit Stretch Reminder?")) {
-    await saveWindowPosition();
-    await invoke("cmd_quit");
+// Close/quit button with custom dialog
+const quitDialog = document.getElementById("quit-dialog")!;
+
+btnClose.addEventListener("click", () => {
+  quitDialog.classList.remove("hidden");
+});
+
+document.getElementById("quit-yes")!.addEventListener("click", async () => {
+  await saveWindowPosition();
+  await invoke("cmd_quit");
+});
+
+document.getElementById("quit-no")!.addEventListener("click", () => {
+  quitDialog.classList.add("hidden");
+});
+
+// Compact mode sizes
+const NORMAL_SIZE = new LogicalSize(200, 140);
+const COMPACT_SIZE = new LogicalSize(80, 28);
+
+async function toggleCompact() {
+  compact = !compact;
+  appEl.classList.toggle("compact", compact);
+  if (compact) {
+    timerEl.textContent = formatTimeShort(lastElapsedS);
+    await resizeAnchored(COMPACT_SIZE);
+  } else {
+    timerEl.textContent = formatTime(lastElapsedS);
+    await resizeAnchored(NORMAL_SIZE);
   }
+}
+
+// Anchor button toggles compact mode
+btnAnchor.addEventListener("click", () => {
+  toggleCompact();
 });
 
 // Double-click to toggle compact mode
-appEl.addEventListener("dblclick", (e) => {
+appEl.addEventListener("dblclick", async (e) => {
   if ((e.target as HTMLElement).closest("#buttons")) return;
   if ((e.target as HTMLElement).closest("#btn-settings")) return;
   if ((e.target as HTMLElement).closest("#btn-stats")) return;
   if ((e.target as HTMLElement).closest("#btn-close")) return;
-  compact = !compact;
-  appEl.classList.toggle("compact", compact);
+  if ((e.target as HTMLElement).closest("#btn-anchor")) return;
+
+  toggleCompact();
 });
 
 // Save window position helper
@@ -182,5 +354,12 @@ getCurrentWindow().onCloseRequested(async (event) => {
   await getCurrentWindow().hide();
 });
 
+// Listen for settings changes to update anchor
+listen("settings-changed", () => {
+  loadAnchorSetting();
+});
+
 // Init
+updateAnchorIcon();
+loadAnchorSetting();
 loadHistory();

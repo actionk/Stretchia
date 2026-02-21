@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Stretch Reminder",
-  "version": "0.1.0",
-  "identifier": "com.littlebrushgames.stretchreminder",
+  "productName": "Stretchia",
+  "version": "1.0.0",
+  "identifier": "com.actionk.stretchia",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Stretch Reminder",
+        "title": "Stretchia",
         "url": "/index.html",
         "width": 200,
         "height": 140,
@@ -27,8 +27,8 @@
         "label": "settings",
         "title": "Settings",
         "url": "/settings.html",
-        "width": 320,
-        "height": 480,
+        "width": 300,
+        "height": 400,
         "resizable": false,
         "decorations": true,
         "transparent": false,
@@ -37,7 +37,7 @@
       },
       {
         "label": "stats",
-        "title": "Statistics — Stretch Reminder",
+        "title": "Statistics — Stretchia",
         "url": "/stats.html",
         "width": 520,
         "height": 560,

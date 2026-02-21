@@ -117,13 +117,30 @@ fn cmd_quit(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn cmd_apply_settings(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
+fn cmd_record_skip(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
+    let mut s = state.lock().map_err(|e| e.to_string())?;
+    let sitting_before = s.timer.elapsed_s as i64;
+    db::record_skip(&s.db, sitting_before).map_err(|e| e.to_string())?;
+    s.timer.reset();
+    Ok(())
+}
+
+#[tauri::command]
+fn cmd_apply_settings(app: tauri::AppHandle, state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
     let mut s = state.lock().map_err(|e| e.to_string())?;
     let afk_threshold = db::get_setting(&s.db, "afk_threshold_min")
         .and_then(|v| v.parse::<u64>().ok())
         .unwrap_or(5)
         * 60;
     s.timer.afk_threshold_s = afk_threshold;
+    s.timer.warn_at_min = db::get_setting(&s.db, "warn_at_min")
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(30);
+    s.timer.shake_at_min = db::get_setting(&s.db, "shake_at_min")
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(60);
+    drop(s);
+    let _ = app.emit("settings-changed", ());
     Ok(())
 }
 
@@ -201,8 +218,17 @@ pub fn run() {
         .unwrap_or(5)
         * 60;
 
+    let warn_at = db::get_setting(&conn, "warn_at_min")
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(30);
+    let shake_at = db::get_setting(&conn, "shake_at_min")
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(60);
+
     let mut timer_state = TimerState::new();
     timer_state.afk_threshold_s = afk_threshold;
+    timer_state.warn_at_min = warn_at;
+    timer_state.shake_at_min = shake_at;
 
     let app_state = AppState {
         timer: timer_state,
@@ -226,6 +252,7 @@ pub fn run() {
             cmd_delete_workout,
             cmd_get_day_stats,
             cmd_apply_settings,
+            cmd_record_skip,
             cmd_quit,
         ])
         .setup(|app| {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stretch Reminder</title>
+    <title>Stretchia</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,12 +12,28 @@
       <div id="buttons">
         <button id="btn-stretch">Stretch</button>
         <button id="btn-treadmill">Treadmill</button>
+        <button id="btn-skip" class="hidden">Skip</button>
       </div>
       <div id="history" data-tauri-drag-region></div>
       <div id="afk-badge" class="hidden">AFK</div>
       <button id="btn-settings" title="Settings">&#9881;</button>
       <button id="btn-stats" title="Statistics">&#9776;</button>
       <button id="btn-close" title="Quit">&#10005;</button>
+      <div id="quit-dialog" class="hidden">
+        <span>Quit?</span>
+        <div id="quit-buttons">
+          <button id="quit-yes">Yes</button>
+          <button id="quit-no">No</button>
+        </div>
+      </div>
+      <div id="skip-dialog" class="hidden">
+        <span id="skip-message"></span>
+        <div id="skip-buttons">
+          <button id="skip-yes">Yes</button>
+          <button id="skip-no">No</button>
+        </div>
+      </div>
+      <button id="btn-anchor" title="Toggle compact">&#9701;</button>
     </div>
     <script type="module" src="main.ts"></script>
   </body>
