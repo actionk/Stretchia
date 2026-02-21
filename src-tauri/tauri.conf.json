@@ -28,7 +28,7 @@
         "title": "Settings",
         "url": "/settings.html",
         "width": 300,
-        "height": 400,
+        "height": 430,
         "resizable": false,
         "decorations": true,
         "transparent": false,
@@ -54,13 +54,21 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "Little Brush Games",
+    "shortDescription": "A tiny break reminder that gently nudges you to stretch",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
   }
 }
