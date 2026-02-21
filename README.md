@@ -1,11 +1,22 @@
-# Stretchia
+<p align="center">
+  <img src="media/logo.png" alt="Stretchia" width="400" />
+</p>
 
-A tiny always-on-top desktop widget that nags you to stretch. Starts polite, gets increasingly aggressive. Built with Tauri 2 (Rust + TypeScript).
+<p align="center">
+  A tiny always-on-top desktop widget that nags you to stretch.<br>
+  Starts polite, gets increasingly aggressive.
+</p>
 
-![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)
-![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white)
-![Tauri](https://img.shields.io/badge/Tauri_2-FFC131?logo=tauri&logoColor=black)
-![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white" />
+  <img src="https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tauri_2-FFC131?logo=tauri&logoColor=black" />
+  <img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" />
+</p>
+
+<p align="center">
+  <img src="media/Screenshot.jpg" alt="Stretchia screenshot" width="600" />
+</p>
 
 ## How It Works
 
