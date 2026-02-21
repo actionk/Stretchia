@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.idea/
+*.sln
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/schemas

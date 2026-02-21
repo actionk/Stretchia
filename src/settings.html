@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — Stretch Reminder</title>
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <div id="settings-app">
+      <h2>Settings</h2>
+
+      <div class="field">
+        <label for="afk_threshold_min">AFK Threshold (minutes)</label>
+        <input type="number" id="afk_threshold_min" min="1" max="60" step="1" />
+        <span class="hint">Pause timer after this many minutes idle</span>
+      </div>
+
+      <div class="field">
+        <label for="warn_at_min">Warning Start (minutes)</label>
+        <input type="number" id="warn_at_min" min="10" max="120" step="5" />
+        <span class="hint">When orange pulsing begins</span>
+      </div>
+
+      <div class="field">
+        <label for="shake_at_min">Shake Start (minutes)</label>
+        <input type="number" id="shake_at_min" min="30" max="180" step="5" />
+        <span class="hint">When window shaking begins</span>
+      </div>
+
+      <div class="field">
+        <label for="window_opacity">Window Opacity</label>
+        <input type="range" id="window_opacity" min="0.3" max="1.0" step="0.05" />
+        <span class="value-display" id="opacity-display">0.8</span>
+      </div>
+
+      <div class="field">
+        <label for="history_dots_count">History Dots</label>
+        <input type="number" id="history_dots_count" min="3" max="20" step="1" />
+        <span class="hint">Number of activity dots shown</span>
+      </div>
+
+      <div class="buttons">
+        <button id="btn-save">Save</button>
+        <button id="btn-cancel">Cancel</button>
+      </div>
+
+      <div id="status" class="hidden"></div>
+    </div>
+    <script type="module" src="settings.ts"></script>
+  </body>
+</html>
