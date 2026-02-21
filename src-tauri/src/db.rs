@@ -154,6 +154,69 @@ pub fn update_setting(conn: &Connection, key: &str, value: &str) -> rusqlite::Re
     Ok(())
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct DayStats {
+    pub date: String,
+    pub stretch_count: i64,
+    pub treadmill_count: i64,
+    pub treadmill_total_s: i64,
+    pub active_s: i64,
+    pub afk_s: i64,
+    pub avg_sitting_before_s: f64,
+    pub max_sitting_before_s: i64,
+    pub workouts: Vec<Workout>,
+}
+
+pub fn get_stats_for_date(conn: &Connection, date: &str) -> rusqlite::Result<DayStats> {
+    let mut stmt = conn.prepare(
+        "SELECT id, type, started_at, ended_at, duration_s, sitting_before_s
+         FROM workouts
+         WHERE date(started_at, 'unixepoch', 'localtime') = ?1
+         ORDER BY started_at"
+    )?;
+    let workouts: Vec<Workout> = stmt.query_map(params![date], |row| {
+        Ok(Workout {
+            id: row.get(0)?,
+            workout_type: row.get(1)?,
+            started_at: row.get(2)?,
+            ended_at: row.get(3)?,
+            duration_s: row.get(4)?,
+            sitting_before_s: row.get(5)?,
+        })
+    })?.collect::<rusqlite::Result<Vec<_>>>()?;
+
+    let stretch_count = workouts.iter().filter(|w| w.workout_type == "stretch").count() as i64;
+    let treadmill_workouts: Vec<&Workout> = workouts.iter().filter(|w| w.workout_type == "treadmill").collect();
+    let treadmill_count = treadmill_workouts.len() as i64;
+    let treadmill_total_s: i64 = treadmill_workouts.iter().map(|w| w.duration_s).sum();
+
+    let sitting_times: Vec<i64> = workouts.iter().map(|w| w.sitting_before_s).collect();
+    let avg_sitting_before_s = if sitting_times.is_empty() {
+        0.0
+    } else {
+        sitting_times.iter().sum::<i64>() as f64 / sitting_times.len() as f64
+    };
+    let max_sitting_before_s = sitting_times.iter().copied().max().unwrap_or(0);
+
+    let (active_s, afk_s) = conn.query_row(
+        "SELECT COALESCE(active_s, 0), COALESCE(afk_s, 0) FROM computer_usage WHERE date = ?1",
+        params![date],
+        |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?)),
+    ).unwrap_or((0, 0));
+
+    Ok(DayStats {
+        date: date.to_string(),
+        stretch_count,
+        treadmill_count,
+        treadmill_total_s,
+        active_s,
+        afk_s,
+        avg_sitting_before_s,
+        max_sitting_before_s,
+        workouts,
+    })
+}
+
 pub fn get_setting(conn: &Connection, key: &str) -> Option<String> {
     conn.query_row(
         "SELECT value FROM settings WHERE key = ?1",

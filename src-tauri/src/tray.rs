@@ -9,11 +9,13 @@ use crate::timer::Stage;
 pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let show = MenuItemBuilder::with_id("show", "Show Window").build(app)?;
     let stretch = MenuItemBuilder::with_id("stretch_now", "Stretch Now").build(app)?;
+    let stats = MenuItemBuilder::with_id("stats", "Statistics").build(app)?;
     let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
     let menu = MenuBuilder::new(app)
         .item(&show)
         .item(&stretch)
+        .item(&stats)
         .item(&settings)
         .separator()
         .item(&quit)
@@ -35,6 +37,9 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 }
                 "stretch_now" => {
                     let _ = app.emit("tray-stretch", ());
+                }
+                "stats" => {
+                    let _ = app.emit("tray-stats", ());
                 }
                 "settings" => {
                     let _ = app.emit("tray-settings", ());

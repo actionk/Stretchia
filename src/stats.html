@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statistics — Stretch Reminder</title>
+    <link rel="stylesheet" href="stats.css" />
+  </head>
+  <body>
+    <div id="stats-app">
+      <div id="nav">
+        <button id="btn-prev" title="Previous day">&larr;</button>
+        <h2 id="date-label">Today</h2>
+        <button id="btn-next" title="Next day">&rarr;</button>
+      </div>
+
+      <div id="summary">
+        <div class="stat-card">
+          <span class="stat-value" id="stretch-count">0</span>
+          <span class="stat-label">Stretches</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="treadmill-count">0</span>
+          <span class="stat-label">Treadmill</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="treadmill-time">0m</span>
+          <span class="stat-label">Walking</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="active-time">0h</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+
+      <div id="details">
+        <div class="detail-row">
+          <span class="detail-label">Avg time between breaks</span>
+          <span class="detail-value" id="avg-sitting">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Longest sitting streak</span>
+          <span class="detail-value" id="max-sitting">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">AFK time</span>
+          <span class="detail-value" id="afk-time">—</span>
+        </div>
+      </div>
+
+      <h3>Activity Timeline</h3>
+      <div id="timeline"></div>
+
+      <div id="empty-state" class="hidden">No activity recorded for this day.</div>
+    </div>
+    <script type="module" src="stats.ts"></script>
+  </body>
+</html>
