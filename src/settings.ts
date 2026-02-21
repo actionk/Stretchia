@@ -68,9 +68,9 @@ getCurrentWindow().onCloseRequested(async (event) => {
   hideWindow();
 });
 
-// Reload settings each time window becomes visible
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
+// Reload settings each time window gains focus
+getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+  if (focused) {
     loadSettings();
   }
 });

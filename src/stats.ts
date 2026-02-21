@@ -130,10 +130,20 @@ async function loadStats() {
         sitting.className = "tl-sitting";
         sitting.textContent = `after ${formatDuration(w.sitting_before_s)}`;
 
+        const del = document.createElement("button");
+        del.className = "tl-delete";
+        del.textContent = "\u00d7";
+        del.title = "Delete";
+        del.addEventListener("click", async () => {
+          await invoke("cmd_delete_workout", { id: w.id });
+          loadStats();
+        });
+
         entry.appendChild(time);
         entry.appendChild(dot);
         entry.appendChild(desc);
         entry.appendChild(sitting);
+        entry.appendChild(del);
         timeline.appendChild(entry);
       }
     }
@@ -163,9 +173,9 @@ getCurrentWindow().onCloseRequested(async (event) => {
   getCurrentWindow().hide();
 });
 
-// Reload when window becomes visible
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
+// Reload when window gains focus
+getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+  if (focused) {
     currentDate = new Date();
     loadStats();
   }
