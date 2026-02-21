@@ -22,6 +22,14 @@ fn open_settings_window(app: &tauri::AppHandle) {
     }
 }
 
+fn open_stats_window(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("stats") {
+        let _ = w.show();
+        let _ = w.center();
+        let _ = w.set_focus();
+    }
+}
+
 #[tauri::command]
 fn cmd_get_timer_state(state: tauri::State<'_, Mutex<AppState>>) -> Result<TimerTickPayload, String> {
     let s = state.lock().map_err(|e| e.to_string())?;
@@ -82,6 +90,18 @@ fn cmd_update_setting(state: tauri::State<'_, Mutex<AppState>>, key: String, val
 fn cmd_open_settings(app: tauri::AppHandle) -> Result<(), String> {
     open_settings_window(&app);
     Ok(())
+}
+
+#[tauri::command]
+fn cmd_open_stats(app: tauri::AppHandle) -> Result<(), String> {
+    open_stats_window(&app);
+    Ok(())
+}
+
+#[tauri::command]
+fn cmd_get_day_stats(state: tauri::State<'_, Mutex<AppState>>, date: String) -> Result<db::DayStats, String> {
+    let s = state.lock().map_err(|e| e.to_string())?;
+    db::get_stats_for_date(&s.db, &date).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -190,6 +210,8 @@ pub fn run() {
             cmd_update_setting,
             cmd_save_window_position,
             cmd_open_settings,
+            cmd_open_stats,
+            cmd_get_day_stats,
             cmd_apply_settings,
         ])
         .setup(|app| {
@@ -215,10 +237,16 @@ pub fn run() {
                 s.timer.reset();
             });
 
-            // Handle tray "Settings" event
+            // Handle tray "Statistics" event
             let handle2 = app.handle().clone();
+            app.listen("tray-stats", move |_| {
+                open_stats_window(&handle2);
+            });
+
+            // Handle tray "Settings" event
+            let handle3 = app.handle().clone();
             app.listen("tray-settings", move |_| {
-                open_settings_window(&handle2);
+                open_settings_window(&handle3);
             });
 
             // Start the timer tick loop

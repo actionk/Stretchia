@@ -34,6 +34,18 @@
         "transparent": false,
         "visible": false,
         "center": true
+      },
+      {
+        "label": "stats",
+        "title": "Statistics — Stretch Reminder",
+        "url": "/stats.html",
+        "width": 520,
+        "height": 560,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "visible": false,
+        "center": true
       }
     ],
     "security": {

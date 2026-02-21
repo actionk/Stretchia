@@ -23,6 +23,7 @@ const timerEl = document.getElementById("timer")!;
 const btnStretch = document.getElementById("btn-stretch")!;
 const btnTreadmill = document.getElementById("btn-treadmill")!;
 const btnSettings = document.getElementById("btn-settings")!;
+const btnStats = document.getElementById("btn-stats")!;
 const historyEl = document.getElementById("history")!;
 const afkBadge = document.getElementById("afk-badge")!;
 const appEl = document.getElementById("app")!;
@@ -134,10 +135,16 @@ btnSettings.addEventListener("click", async () => {
   await invoke("cmd_open_settings");
 });
 
+// Stats button
+btnStats.addEventListener("click", async () => {
+  await invoke("cmd_open_stats");
+});
+
 // Double-click to toggle compact mode
 appEl.addEventListener("dblclick", (e) => {
   if ((e.target as HTMLElement).closest("#buttons")) return;
   if ((e.target as HTMLElement).closest("#btn-settings")) return;
+  if ((e.target as HTMLElement).closest("#btn-stats")) return;
   compact = !compact;
   appEl.classList.toggle("compact", compact);
 });
